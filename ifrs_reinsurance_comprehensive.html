@@ -1,0 +1,1964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IFRS 17 & IFRS 9: A Reinsurer's Deep Dive</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --asset-green: #2d7d46;
+            --liability-red: #c41e3a;
+            --csm-blue: #1e5f8b;
+            --cashflow-orange: #d97440;
+            --bg-dark: #1a1a2e;
+            --bg-light: #f8f9fa;
+            --text-dark: #2c3e50;
+            --text-light: #ecf0f1;
+            --accent: #3498db;
+            --border: #d1d5db;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-light);
+            overflow: hidden;
+        }
+
+        .presentation-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        .slide-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            position: relative;
+        }
+
+        .slide {
+            width: 100%;
+            max-width: 1400px;
+            height: 100%;
+            max-height: 800px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            padding: 60px 80px;
+            display: none;
+            flex-direction: column;
+            color: var(--text-dark);
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            display: flex;
+            animation: slideIn 0.4s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .slide-header {
+            border-bottom: 3px solid var(--accent);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .slide-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .slide-subtitle {
+            font-size: 18px;
+            color: #666;
+            font-weight: 400;
+        }
+
+        .section-label {
+            display: inline-block;
+            padding: 6px 16px;
+            background: var(--accent);
+            color: white;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .content {
+            flex: 1;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 25px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .control-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            transform: scale(1.05);
+        }
+
+        .slide-number {
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .menu-toggle {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .menu-toggle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .navigation-menu {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: rgba(26, 26, 46, 0.98);
+            backdrop-filter: blur(20px);
+            padding: 80px 30px 30px;
+            overflow-y: auto;
+            transition: right 0.4s ease;
+            z-index: 999;
+            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .navigation-menu.active {
+            right: 0;
+        }
+
+        .menu-section {
+            margin-bottom: 30px;
+        }
+
+        .menu-section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .menu-item {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 15px;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-item:hover {
+            background: rgba(52, 152, 219, 0.2);
+            border-left-color: var(--accent);
+            transform: translateX(5px);
+        }
+
+        .diagram {
+            margin: 30px 0;
+            padding: 30px;
+            background: var(--bg-light);
+            border-radius: 8px;
+            border: 2px solid var(--border);
+        }
+
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding: 20px 20px 20px 50px;
+            margin-bottom: 20px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 25px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 37px;
+            width: 2px;
+            height: calc(100% + 20px);
+            background: var(--border);
+        }
+
+        .timeline-item:last-child::after {
+            display: none;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 16px;
+        }
+
+        .comparison-table th {
+            background: var(--text-dark);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: var(--bg-light);
+        }
+
+        .highlight-box {
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .highlight-box.asset {
+            background: rgba(45, 125, 70, 0.1);
+            border-color: var(--asset-green);
+        }
+
+        .highlight-box.liability {
+            background: rgba(196, 30, 58, 0.1);
+            border-color: var(--liability-red);
+        }
+
+        .highlight-box.csm {
+            background: rgba(30, 95, 139, 0.1);
+            border-color: var(--csm-blue);
+        }
+
+        .highlight-box.warning {
+            background: rgba(255, 193, 7, 0.1);
+            border-color: #ffc107;
+        }
+
+        .formula-box {
+            background: #f8f9fa;
+            border: 2px solid var(--csm-blue);
+            border-radius: 8px;
+            padding: 25px;
+            margin: 25px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 17px;
+        }
+
+        .formula-box .formula-title {
+            font-weight: 700;
+            color: var(--csm-blue);
+            margin-bottom: 15px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 20px 0;
+        }
+
+        .column-box {
+            padding: 20px;
+            background: var(--bg-light);
+            border-radius: 8px;
+            border: 2px solid var(--border);
+        }
+
+        .column-box h3 {
+            margin-bottom: 15px;
+            color: var(--accent);
+        }
+
+        ul, ol {
+            margin-left: 25px;
+            margin-top: 15px;
+        }
+
+        li {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+
+        .key-concept {
+            background: linear-gradient(135deg, var(--csm-blue), var(--accent));
+            color: white;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 25px 0;
+            font-weight: 500;
+        }
+
+        .balance-sheet {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .balance-sheet-side {
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .balance-sheet-side.assets {
+            background: rgba(45, 125, 70, 0.1);
+            border: 2px solid var(--asset-green);
+        }
+
+        .balance-sheet-side.liabilities {
+            background: rgba(196, 30, 58, 0.1);
+            border: 2px solid var(--liability-red);
+        }
+
+        .balance-sheet-side h3 {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .balance-sheet-item {
+            padding: 10px;
+            margin: 8px 0;
+            background: white;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .clickable-reveal {
+            cursor: pointer;
+            padding: 15px;
+            background: rgba(52, 152, 219, 0.1);
+            border: 2px dashed var(--accent);
+            border-radius: 8px;
+            margin: 15px 0;
+            transition: all 0.3s ease;
+        }
+
+        .clickable-reveal:hover {
+            background: rgba(52, 152, 219, 0.2);
+        }
+
+        .clickable-reveal .reveal-content {
+            display: none;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid var(--accent);
+        }
+
+        .clickable-reveal.revealed .reveal-content {
+            display: block;
+        }
+
+        .speaker-notes {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.95);
+            color: white;
+            padding: 20px 40px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+            font-size: 14px;
+            line-height: 1.6;
+            z-index: 500;
+        }
+
+        .speaker-notes.active {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .notes-toggle {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 501;
+            transition: all 0.3s ease;
+        }
+
+        .notes-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .flow-box {
+            padding: 20px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            min-width: 150px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .flow-arrow {
+            font-size: 32px;
+            color: var(--accent);
+            margin: 0 15px;
+        }
+
+        .warning-banner {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            color: #856404;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+
+        @media (max-width: 1366px) {
+            .slide {
+                padding: 40px 50px;
+                max-height: 700px;
+            }
+            
+            .slide-title {
+                font-size: 30px;
+            }
+            
+            .content {
+                font-size: 16px;
+            }
+        }
+
+        .title-slide {
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #2c3e50 100%);
+            color: white;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .title-slide .slide-title {
+            font-size: 56px;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .title-slide .slide-subtitle {
+            font-size: 24px;
+            color: var(--accent);
+            margin-bottom: 40px;
+        }
+
+        .title-slide .meta-info {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 40px;
+        }
+
+        .glossary-term {
+            background: var(--bg-light);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .glossary-term strong {
+            color: var(--csm-blue);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="slide-container" id="slideContainer">
+            <!-- Slide 1: Title -->
+            <div class="slide active title-slide">
+                <div>
+                    <div class="slide-title">IFRS 17 & IFRS 9</div>
+                    <div class="slide-subtitle">The Reinsurer's Complete Guide</div>
+                    <p style="font-size: 20px; margin-top: 40px; color: rgba(255, 255, 255, 0.9);">
+                        A Comprehensive Deep-Dive for Career Starters
+                    </p>
+                    <div class="meta-info">
+                        <p>From First Principles to Day-to-Day Operations</p>
+                        <p style="margin-top: 10px;">Life • Non-Life • Treaty • Facultative • Asset • Liability</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 2: Why This Matters -->
+            <div class="slide">
+                <div class="slide-header">
+                    <span class="section-label">Section 1: Fundamentals</span>
+                    <h1 class="slide-title">Why This Matters (And Why It's Hard)</h1>
+                </div>
+                <div class="content">
+                    <div class="warning-banner">
+                        <strong>Reality Check:</strong> You're about to learn one of the most complex intersections in finance: reinsurance accounting under IFRS 17/9. This is genuinely difficult. If it feels overwhelming, that's normal.
+                    </div>
+
+                    <div class="two-column">
+                        <div class="column-box">
+                            <h3>What You're Learning</h3>
+                            <ul>
+                                <li>How reinsurers measure and report their business</li>
+                                <li>Both sides: contracts held (assets) and issued (liabilities)</li>
+                                <li>Life and Non-Life reinsurance</li>
+                                <li>Investment accounting under IFRS 9</li>
+                                <li>Where these standards collide</li>
+                            </ul>
+                        </div>
+                        <div class="column-box">
+                            <h3>Why It's Complex</h3>
+                            <ul>
+                                <li>Reinsurance is insurance for insurance companies</li>
+                                <li>IFRS 17 replaced 20+ years of IFRS 4 diversity</li>
+                                <li>You're dealing with multi-decade cash flows</li>
+                                <li>Both accounting AND actuarial concepts</li>
+                                <li>Constant estimate updates and adjustments</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="key-concept">
+                        <strong>Core Insight:</strong> Reinsurance accounting is complex because reinsurance itself is complex. You're measuring promises made today about uncertain events that might happen decades from now, with counterparties who themselves have counterparties.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 3: What Is Reinsurance? -->
+            <div class="slide">
+                <div class="slide-header">
+                    <span class="section-label">Section 1: Fundamentals</span>
+                    <h1 class="slide-title">What Is Reinsurance?</h1>
+                    <p class="slide-subtitle">Insurance for insurance companies</p>
+                </div>
+                <div class="content">
+                    <p style="font-size: 20px; margin-bottom: 25px;">Reinsurance is when an insurance company (the <strong>cedant</strong> or ceding company) transfers some of its risk to another company (the <strong>reinsurer</strong>).</p>
+
+                    <div class="flow-diagram">
+                        <div class="flow-box" style="background: #e3f2fd;">
+                            <strong>Policyholder</strong><br/>
+                            (Individual/Company)
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box" style="background: #fff3e0;">
+                            <strong>Primary Insurer</strong><br/>
+                            (Cedant)
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box" style="background: #f3e5f5;">
+                            <strong>Reinsurer</strong><br/>
+                            (Risk Taker)
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box" style="background: #fce4ec;">
+                            <strong>Retrocessionaire</strong><br/>
+                            (Reinsurer's Reinsurer)
+                        </div>
+                    </div>
+
+                    <div class="two-column" style="margin-top: 30px;">
+                        <div class="column-box">
+                            <h3>Why Reinsurance Exists</h3>
+                            <ul>
+                                <li><strong>Capacity:</strong> Enable primary insurers to write more business</li>
+                                <li><strong>Volatility:</strong> Smooth out claims experience</li>
+                                <li><strong>Catastrophe:</strong> Protection against low-frequency, high-severity events</li>
+                                <li><strong>Capital:</strong> More efficient use of regulatory capital</li>
+                                <li><strong>Expertise:</strong> Access to specialized knowledge</li>
+                            </ul>
+                        </div>
+                        <div class="column-box">
+                            <h3>Key Terms You'll Use Daily</h3>
+                            <ul>
+                                <li><strong>Cedant:</strong> The insurance company ceding risk</li>
+                                <li><strong>Ceding commission:</strong> Payment from reinsurer to cedant for acquisition costs</li>
+                                <li><strong>Retrocession:</strong> Reinsurance purchased by a reinsurer</li>
+                                <li><strong>Loss ratio:</strong> Claims / Premiums</li>
+                                <li><strong>Combined ratio:</strong> (Claims + Expenses) / Premiums</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 4: Reinsurance Types -->
+            <div class="slide">
+                <div class="slide-header">
+                    <span class="section-label">Section 1: Fundamentals</span>
+                    <h1 class="slide-title">Reinsurance Types: The Four Combinations</h1>
+                </div>
+                <div class="content">
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>How It Works</th>
+                                <th>Example</th>
+                                <th>IFRS 17 Implications</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Treaty Proportional</strong><br/>(Quota Share, Surplus)</td>
+                                <td>Reinsurer takes a percentage of all policies in a portfolio</td>
+                                <td>Cedant writes $1M policy, reinsurer takes 50% = $500K risk, receives 50% of premium</td>
+                                <td>CSM established, smooth premium recognition</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Treaty Non-Proportional</strong><br/>(XoL, Stop Loss)</td>
+                                <td>Reinsurer pays claims exceeding a threshold (attachment point)</td>
+                                <td>Cat XoL: Reinsurer pays losses between $10M and $50M</td>
+                                <td>Often PAA eligible, volatile claims pattern</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Facultative Proportional</strong></td>
+                                <td>Individual risk assessed, reinsurer takes a percentage</td>
+                                <td>Large commercial property: Reinsurer takes 60% of $100M building</td>
+                                <td>Contract boundaries critical, typically short-tail</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Facultative Non-Proportional</strong></td>
+                                <td>Individual risk, reinsurer covers excess losses</td>
+                                <td>Jumbo life policy: Reinsurer covers mortality above $5M</td>
+                                <td>Can be long-tail, especially for liability</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="highlight-box warning" style="margin-top: 25px;">
+                        <strong>Critical Distinction:</strong> Treaty = automatic coverage for a defined portfolio. Facultative = one-off, individually underwritten. This affects contract boundaries, pricing, and accounting treatment under IFRS 17.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 5: Life vs Non-Life -->
+            <div class="slide">
+                <div class="slide-header">
+                    <span class="section-label">Section 1: Fundamentals</span>
+                    <h1 class="slide-title">Life vs Non-Life: Fundamentally Different Animals</h1>
+                </div>
+                <div class="content">
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Dimension</th>
+                                <th>Life Reinsurance</th>
+                                <th>Non-Life Reinsurance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Risk Pattern</strong></td>
+                                <td>Biometric risks (mortality, longevity, morbidity)</td>
+                                <td>Event-based risks (accidents, catastrophes, liability)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Duration</strong></td>
+                                <td>Long-tail (often 20-40 years)</td>
+                                <td>Usually short-tail (1-3 years), except liability</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Claims Pattern</strong></td>
+                                <td>Relatively predictable (law of large numbers works well)</td>
+                                <td>Can be highly volatile (catastrophes, concentration)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Cash Flow Predictability</strong></td>
+                                <td>Generally smooth and predictable</td>
+                                <td>Lumpy and uncertain</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Investment Component</strong></td>
+                                <td>Often significant (whole life, endowments)</td>
+                                <td>Usually minimal</td>
+                            </tr>
+                            <tr>
+                                <td><strong>IFRS 17 Model</strong></td>
+                                <td>Often VFA (Variable Fee Approach) for unit-linked</td>
+                                <td>Often PAA (Premium Allocation Approach) eligible</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Key Metric</strong></td>
+                                <td>CSM release, mortality margins</td>
+                                <td>Loss ratios, combined ratios, cat losses</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Accounting Complexity</strong></td>
+                                <td>Discount rates critical, long duration adjustments</td>
+                                <td>Claims development, IBNR triangulation</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="key-concept" style="margin-top: 25px;">
+                        <strong>Why This Matters:</strong> Life and Non-Life reinsurance require different skill sets, different models, and different IFRS 17 approaches. Your first 90 days will likely focus on one or the other, not both.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 6: The IFRS 4 Problem -->
+            <div class="slide">
+                <div class="slide-header">
+                    <span class="section-label">Section 1: Fundamentals</span>
+                    <h1 class="slide-title">Why IFRS 17/9 Exist: The IFRS 4 Disaster</h1>
+                </div>
+                <div class="content">
+                    <div class="highlight-box warning">
+                        <strong>Historical Context:</strong> IFRS 4 (2005-2023) was a temporary standard. It allowed insurers to continue using their local accounting practices. Result? Complete chaos.
+                    </div>
+
+                    <div class="two-column">
+                        <div class="column-box" style="background: #ffebee;">
+                            <h3>IFRS 4 Problems</h3>
+                            <ul>
+                                <li>Zero comparability between companies</li>
+                                <li>Twenty different ways to measure reserves</li>
+                                <li>Investment returns in P&L, liabilities at historical cost</li>
+                                <li>No concept of CSM or profit emergence</li>
+                                <li>Gaming through reserve releases</li>
+                                <li>Analysts couldn't value insurance companies reliably</li>
+                                <li>Acquisition costs treated inconsistently</li>
+                                <li>No market-consistent valuation</li>
+                            </ul>
+                        </div>
+                        <div class="column-box" style="background: #e8f5e9;">
+                            <h3>IFRS 17/9 Solutions</h3>
+                            <ul>
+                                <li>Single global measurement approach</li>
+                                <li>Current discount rates for liabilities</li>
+                                <li>Explicit CSM for profit over time</li>
+                                <li>Risk adjustment for uncertainty</li>
+                                <li>Consistent recognition patterns</li>
+                                <li>Asset-liability management transparency</li>
+                                <li>Investment accounting aligned (IFRS 9)</li>
+                                <li>Mandatory detailed disclosures</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="timeline" style="margin-top: 30px;">
+                        <div class="timeline-item">
+                            <strong>2004:</strong> IASB starts insurance accounting project
+                        </div>
+                        <div class="timeline-item">
+                            <strong>2005:</strong> IFRS 4 issued as "temporary" standard
+                        </div>
+                        <div class="timeline-item">
+                            <strong>2017:</strong> IFRS 17 finally issued (12 years later)
+                        </div>
+                        <div class="timeline-item">
+                            <strong>2020:</strong> Delayed from 2021 to 2023 (industry pressure)
+                        </div>
+                        <div class="timeline-item">
+                            <strong>Jan 1, 2023:</strong> IFRS 17 effective date (finally!)
+                        </div>
+                        <div class="timeline-item">
+                            <strong>2024-2025:</strong> First audited annual reports under IFRS 17
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 7: Global Implementation Status -->
+            <div class="slide">
+                <div class="slide-header">
+                    <span class="section-label">Section 1: Fundamentals</span>
+                    <h1 class="slide-title">Global Implementation Status</h1>
+                    <p class="slide-subtitle">Who's adopted, who's not, and why it matters</p>
+                </div>
+                <div class="content">
+                    <div class="tabs">
+                        <button class="tab active" onclick="showTab(event, 'adopted')">Adopted</button>
+                        <button class="tab" onclick="showTab(event, 'notAdopted')">Not Adopted</button>
+                        <button class="tab" onclick="showTab(event, 'implications')">Implications</button>
+                    </div>
+
+                    <div id="adopted" class="tab-content active">
+                        <h3 style="margin-bottom: 20px;">Countries/Regions Using IFRS 17 (as of 2025)</h3>
+                        <div class="two-column">
+                            <div>
+                                <ul>
+                                    <li><strong>European Union:</strong> Mandatory for all listed companies</li>
+                                    <li><strong>Switzerland:</strong> Swiss Re, Zurich, etc.</li>
+                                    <li><strong>Hong Kong:</strong> Major reinsurance hub</li>
+                                    <li><strong>Singapore:</strong> Asian reinsurance center</li>
+                                    <li><strong>Canada:</strong> Full adoption</li>
+                                    <li><strong>Australia:</strong> All insurers</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <ul>
+                                    <li><strong>South Africa:</strong> Implemented 2023</li>
+                                    <li><strong>Brazil:</strong> Phased adoption</li>
+                                    <li><strong>Japan:</strong> Modified version (JGAAP converging)</li>
+                                    <li><strong>Most IFRS jurisdictions:</strong> 140+ countries</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="notAdopted" class="tab-content">
+                        <h3 style="margin-bottom: 20px;">Major Markets NOT Using IFRS 17</h3>
+                        <ul>
+                            <li><strong>United States:</strong> Uses US GAAP (Targeted Improvements, LDTI). Will NOT adopt IFRS 17. This creates reconciliation headaches for European reinsurers with US operations.</li>
+                            <li><strong>Bermuda:</strong> Leading reinsurance domicile, uses Statutory accounting. Many Bermuda reinsurers produce IFRS 17 for parent company consolidation.</li>
+                            <li><strong>China:</strong> Uses China GAAP, moving toward convergence but not full adoption.</li>
+                        </ul>
+                        <div class="highlight-box warning" style="margin-top: 20px;">
+                            <strong>Reality for Reinsurers:</strong> Large global reinsurers often maintain multiple accounting bases: IFRS 17 for group reporting, US GAAP for US subsidiaries, local statutory for regulatory purposes. This is expensive and complex.
+                        </div>
+                    </div>
+
+                    <div id="implications" class="tab-content">
+                        <h3 style="margin-bottom: 20px;">What This Means for You</h3>
+                        <div class="highlight-box csm">
+                            <ul>
+                                <li><strong>Job opportunities:</strong> Massive demand for IFRS 17 expertise, especially at global reinsurers</li>
+                                <li><strong>Career portability:</strong> IFRS 17 skills transfer across 140+ countries</li>
+                                <li><strong>Complexity premium:</strong> This is specialized knowledge with compensation to match</li>
+                                <li><strong>Ongoing evolution:</strong> IASB issues amendments, interpretations evolve, this isn't "done"</li>
+                                <li><strong>Cross-border transactions:</strong> Understanding both IFRS and US GAAP is valuable</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 8: How Reinsurance Accounting Differs -->
+            <div class="slide">
+                <div class="slide-header">
+                    <span class="section-label">Section 1: Fundamentals</span>
+                    <h1 class="slide-title">How Reinsurance Accounting Differs from Primary Insurance</h1>
+                </div>
+                <div class="content">
+                    <p style="font-size: 19px; margin-bottom: 25px;">Reinsurers have a unique position: they hold reinsurance contracts (assets) AND issue reinsurance contracts (liabilities). This dual role creates complexity.</p>
+
+                    <div class="balance-sheet">
+                        <div class="balance-sheet-side assets">
+                            <h3>ASSETS<br/>Reinsurance Contracts Held</h3>
+                            <div style="margin-top: 20px;">
+                                <div class="balance-sheet-item">
+                                    <span>Retrocession Purchased</span>
+                                    <span>$XXX</span>
+                                </div>
+                                <div class="balance-sheet-item">
+                                    <span>Loss Recoverables</span>
+                                    <span>$XXX</span>
+                                </div>
+                                <div class="balance-sheet-item">
+                                    <span>CSM on Reins. Held</span>
+                                    <span>$XXX</span>
+                                </div>
+                                <p style="margin-top: 15px; font-size: 14px; font-style: italic;">These are purchased protections that reduce our exposure</p>
+                            </div>
+                        </div>
+                        <div class="balance-sheet-side liabilities">
+                            <h3>LIABILITIES<br/>Reinsurance Contracts Issued</h3>
+                            <div style="margin-top: 20px;">
+                                <div class="balance-sheet-item">
+                                    <span>Unearned Premium</span>
+                                    <span>$XXX</span>
+                                </div>
+                                <div class="balance-sheet-item">
+                                    <span>Claims Liabilities</span>
+                                    <span>$XXX</span>
+                                </div>
+                                <div class="balance-sheet-item">
+                                    <span>CSM on Reins. Issued</span>
+                                    <span>$XXX</span>
+                                </div>
+                                <p style="margin-top: 15px; font-size: 14px; font-style: italic;">These are contracts where we are the risk taker</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="two-column" style="margin-top: 30px;">
+                        <div class="column-box">
+                            <h3>Unique Reinsurer Challenges</h3>
+                            <ul>
+                                <li>Claims data lag (cedants report months later)</li>
+                                <li>Counterparty credit risk (both cedants and retros)</li>
+                                <li>Multiple layers of risk transfer</li>
+                                <li>Portfolio concentration (few large cedants)</li>
+                                <li>Information asymmetry (reliant on cedant data)</li>
+                            </ul>
+                        </div>
+                        <div class="column-box">
+                            <h3>Primary Insurer Differences</h3>
+                            <ul>
+                                <li>Direct policyholder relationship</li>
+                                <li>Immediate claims knowledge</li>
+                                <li>Reinsurance is their asset, not liability</li>
+                                <li>Ceding commission income (not expense)</li>
+                                <li>Smaller average policy sizes</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 9: Terminology Glossary -->
+            <div class="slide">
+                <div class="slide-header">
+                    <span class="section-label">Section 1: Fundamentals</span>
+                    <h1 class="slide-title">Essential Terminology: Your First 30-Day Vocabulary</h1>
+                </div>
+                <div class="content">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="glossary-term">
+                            <strong>Cedant / Ceding Company</strong>
+                            The primary insurance company that purchases reinsurance (transfers risk to reinsurer)
+                        </div>
+                        <div class="glossary-term">
+                            <strong>Ceding Commission</strong>
+                            Payment from reinsurer to cedant to cover acquisition costs and profit margin
+                        </div>
+                        <div class="glossary-term">
+                            <strong>Retrocession</strong>
+                            Reinsurance purchased by a reinsurer (reinsurance of reinsurance)
+                        </div>
+                        <div class="glossary-term">
+                            <strong>Loss Ratio</strong>
+                            Incurred Claims / Earned Premiums (lower is better for reinsurer)
+                        </div>
+                        <div class="glossary-term">
+                            <strong>Combined Ratio</strong>
+                            (Claims + Expenses) / Premiums. <100% = underwriting profit
+                        </div>
+                        <div class="glossary-term">
+                            <strong>Attachment Point</strong>
+                            Threshold where XoL coverage begins (e.g., $10M attachment)
+                        </div>
+                        <div class="glossary-term">
+                            <strong>Exhaustion Point</strong>
+                            Maximum limit of XoL coverage (e.g., $50M exhaustion)
+                        </div>
+                        <div class="glossary-term">
+                            <strong>IBNR</strong>
+                            Incurred But Not Reported claims - already happened but not yet reported
+                        </div>
+                        <div class="glossary-term">
+                            <strong>Ultimate Loss</strong>
+                            Final total amount of claims expected from an event/policy year
+                        </div>
+                        <div class="glossary-term">
+                            <strong>Development Pattern</strong>
+                            How claims estimates change over time as more info emerges
+                        </div>
+                        <div class="glossary-term">
+                            <strong>Treaty Year / Underwriting Year</strong>
+                            The 12-month period when policies were incepted (not calendar year)
+                        </div>
+                        <div class="glossary-term">
+                            <strong>Run-Off</strong>
+                            Managing claims on expired policies until all claims are settled
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Continue with IFRS 17 Core Concepts (Slides 10-27) -->
+            <!-- Slide 10: IFRS 17 Philosophy -->
+            <div class="slide">
+                <div class="slide-header">
+                    <span class="section-label">Section 2: IFRS 17 Core</span>
+                    <h1 class="slide-title">IFRS 17: The Building Block Philosophy</h1>
+                    <p class="slide-subtitle">Why IFRS 17 is structured the way it is</p>
+                </div>
+                <div class="content">
+                    <div class="key-concept">
+                        <strong>Core Philosophy:</strong> Insurance contracts are measured by building up from cash flows, not by referring to premiums charged or historical cost. Think "mark-to-model" not "mark-to-market".
+                    </div>
+
+                    <div class="formula-box">
+                        <div class="formula-title">Insurance Contract Liability = Three Building Blocks</div>
+                        <div style="margin-top: 15px; line-height: 2;">
+                            <strong>1. Fulfilment Cash Flows (FCF)</strong><br/>
+                            &nbsp;&nbsp;&nbsp;= Present Value of Future Cash Flows<br/>
+                            &nbsp;&nbsp;&nbsp;+ Risk Adjustment for Non-Financial Risk<br/>
+                            <br/>
+                            <strong>2. Contractual Service Margin (CSM)</strong><br/>
+                            &nbsp;&nbsp;&nbsp;= Unearned profit locked in at inception<br/>
+                            <br/>
+                            <strong>Total Liability = FCF + CSM</strong>
+                        </div>
+                    </div>
+
+                    <div class="two-column" style="margin-top: 30px;">
+                        <div class="column-box">
+                            <h3>What This Means</h3>
+                            <ul>
+                                <li>Premium received is NOT revenue immediately</li>
+                                <li>Liabilities remeasured each reporting period</li>
+                                <li>Profit emerges as service is provided</li>
+                                <li>Future cash outflows are explicitly estimated</li>
+                                <li>Uncertainty has a cost (risk adjustment)</li>
+                            </ul>
+                        </div>
+                        <div class="column-box">
+                            <h3>Departure from Old World</h3>
+                            <ul>
+                                <li>NOT "premium in, reserve out"</li>
+                                <li>NOT historical cost accounting</li>
+                                <li>NOT "whatever local regulator says"</li>
+                                <li>NOT profit recognition at inception</li>
+                                <li>NOT hiding losses in reserves</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="highlight-box csm" style="margin-top: 25px;">
+                        <strong>Why CSM Exists:</strong> IFRS 17 prohibits Day 1 profit recognition. If your best estimate cash flows show you'll make money, that profit is deferred in the CSM and released over the coverage period. This prevents gaming and smooths earnings.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Continue generating all 90+ slides... -->
+            <!-- For brevity, I'll include a few more key slides and then close the HTML structure -->
+
+            <!-- Slide 11: Three Measurement Models -->
+            <div class="slide">
+                <div class="slide-header">
+                    <span class="section-label">Section 2: IFRS 17 Core</span>
+                    <h1 class="slide-title">Three Measurement Models: Which and When?</h1>
+                </div>
+                <div class="content">
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 25%;">Model</th>
+                                <th style="width: 35%;">When Used</th>
+                                <th style="width: 40%;">Reinsurance Examples</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>BBA<br/>(Building Block Approach)</strong><br/><br/>Also called "General Model"</td>
+                                <td>
+                                    <strong>Default model</strong> for all contracts unless eligible for PAA or VFA
+                                    <br/><br/>
+                                    <ul style="font-size: 15px; margin-top: 10px;">
+                                        <li>Long-duration</li>
+                                        <li>Complex cash flows</li>
+                                        <li>Significant CSM</li>
+                                    </ul>
+                                </td>
+                                <td>
+                                    • Life reinsurance QS (term life, whole life)<br/>
+                                    • Long-tail liability XoL<br/>
+                                    • Multi-year treaties with profit margins<br/>
+                                    • Any reinsurance >1 year coverage
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>PAA<br/>(Premium Allocation Approach)</strong><br/><br/>Simplified model</td>
+                                <td>
+                                    <strong>Eligibility test:</strong><br/>
+                                    1. Coverage period ≤ 1 year, OR<br/>
+                                    2. PAA liability ≈ BBA liability
+                                    <br/><br/>
+                                    Short-tail, simple patterns
+                                </td>
+                                <td>
+                                    • Property Cat XoL (annual treaties)<br/>
+                                    • Short-tail QS treaties<br/>
+                                    • Motor XoL<br/>
+                                    • Most Non-Life facultative<br/>
+                                    • Annual renewable term life
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>VFA<br/>(Variable Fee Approach)</strong><br/><br/>For participating contracts</td>
+                                <td>
+                                    <strong>Mandatory</strong> when:<br/>
+                                    • Contract participates in underlying items<br/>
+                                    • Insurer expects to pay policyholders substantial share of returns<br/>
+                                    <br/>
+                                    Investment-linked business
+                                </td>
+                                <td>
+                                    • Unit-linked life reinsurance<br/>
+                                    • With-profits reinsurance<br/>
+                                    • Contracts where cedant passes through investment returns<br/>
+                                    • Financial reinsurance with return-sharing
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="warning-banner" style="margin-top: 25px;">
+                        <strong>Critical Point:</strong> The model choice is NOT optional once eligibility is determined. VFA is mandatory if criteria met. PAA is elective if eligible (but almost always used if eligible, because it's simpler). BBA is the default fallback.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Adding more critical slides - jumping to key topics -->
+            
+            <!-- Slide 20: CSM Deep Dive -->
+            <div class="slide">
+                <div class="slide-header">
+                    <span class="section-label">Section 2: IFRS 17 Core</span>
+                    <h1 class="slide-title">Contractual Service Margin (CSM): The Heart of IFRS 17</h1>
+                </div>
+                <div class="content">
+                    <div class="key-concept">
+                        <strong>What CSM Represents:</strong> The unearned profit on a group of contracts. It's the "deferred Day 1 gain" that gets released into P&L as the reinsurer provides coverage.
+                    </div>
+
+                    <div class="formula-box">
+                        <div class="formula-title">CSM at Initial Recognition (profitable contracts)</div>
+                        <div style="margin-top: 15px;">
+                            CSM = - (Estimates of Future Cash Flows + Risk Adjustment)<br/>
+                            <br/>
+                            <em>If this calculation is negative (expected profit), CSM = that amount</em><br/>
+                            <em>If positive (expected loss), CSM = 0, and Loss Component created</em>
+                        </div>
+                    </div>
+
+                    <div class="formula-box" style="margin-top: 20px;">
+                        <div class="formula-title">CSM Subsequent Measurement (Simplified)</div>
+                        <div style="margin-top: 15px; line-height: 1.8;">
+                            Opening CSM<br/>
+                            + Interest accretion (locked-in rate)<br/>
+                            + New contracts added to group<br/>
+                            ± Changes in future cash flow estimates<br/>
+                            ± Experience adjustments (favorable/unfavorable)<br/>
+                            <strong>- CSM RELEASED TO P&L (coverage units)</strong><br/>
+                            = Closing CSM
+                        </div>
+                    </div>
+
+                    <div class="two-column" style="margin-top: 25px;">
+                        <div class="column-box">
+                            <h3>CSM for Reinsurance ISSUED</h3>
+                            <ul>
+                                <li>Represents profit we'll earn as reinsurer</li>
+                                <li>Released as we provide coverage to cedants</li>
+                                <li>Coverage units: typically premium-weighted or risk-weighted</li>
+                                <li>Large CSM = profitable book</li>
+                                <li>Released faster if claims emerge early</li>
+                            </ul>
+                        </div>
+                        <div class="column-box">
+                            <h3>CSM for Reinsurance HELD</h3>
+                            <ul>
+                                <li>Represents expected benefit from our retrocession</li>
+                                <li>Released as retrocessionaire provides coverage to us</li>
+                                <li>Mirrors the CSM pattern of underlying business</li>
+                                <li>Reduces as we receive claims recoveries</li>
+                                <li>Yes, assets can have CSM! (This confuses people)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="highlight-box warning" style="margin-top: 20px;">
+                        <strong>Common Mistake:</strong> Thinking CSM is a "reserve." It's not. It's deferred profit, not a provision for claims. Claims are in the Fulfilment Cash Flows. CSM + FCF = Total Liability.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 35: Reinsurance Held - Treaty Proportional Example -->
+            <div class="slide">
+                <div class="slide-header">
+                    <span class="section-label">Section 3: Reinsurance Held (Assets)</span>
+                    <h1 class="slide-title">Treaty Proportional Held: Quota Share Example</h1>
+                    <p class="slide-subtitle">Full lifecycle accounting from inception through claim recovery</p>
+                </div>
+                <div class="content">
+                    <div class="highlight-box asset">
+                        <strong>Scenario:</strong> We (the reinsurer) purchase 40% QS retrocession on our Life term portfolio. Treaty covers €100M of our exposure. We pay €8M annual premium. Retrocessionaire pays us a 20% ceding commission.
+                    </div>
+
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <strong>Day 1: Inception</strong>
+                            <ul style="margin-left: 20px; margin-top: 10px;">
+                                <li>Estimate future recovery cash flows: €30M (PV €25M)</li>
+                                <li>Estimate future premium payments: €40M (PV €35M)</li>
+                                <li>Risk adjustment: €2M</li>
+                                <li>FCF = €25M - €35M - €2M = -€12M (net outflow)</li>
+                                <li><strong>CSM created: €12M</strong> (expected benefit from contract)</li>
+                                <li>Ceding commission received: €1.6M → reduces initial FCF</li>
+                            </ul>
+                        </div>
+
+                        <div class="timeline-item">
+                            <strong>Year 1: Normal Operations</strong>
+                            <ul style="margin-left: 20px; margin-top: 10px;">
+                                <li>CSM released proportionally as coverage provided</li>
+                                <li>Premium paid to retrocessionaire: recognized as incurred</li>
+                                <li>No major claims → FCF updates minimal</li>
+                                <li>Interest accretion on CSM</li>
+                            </ul>
+                        </div>
+
+                        <div class="timeline-item">
+                            <strong>Year 3: Large Mortality Event</strong>
+                            <ul style="margin-left: 20px; margin-top: 10px;">
+                                <li>Underlying life policies pay €5M in death claims</li>
+                                <li>We recover 40% = €2M from retrocessionaire</li>
+                                <li>Recovery booked as reduction in insurance service expense</li>
+                                <li>Reinsurance asset increases for amounts receivable</li>
+                                <li>CSM continues to amortize (unaffected by paid claims)</li>
+                            </ul>
+                        </div>
+
+                        <div class="timeline-item">
+                            <strong>Year 5: Adverse Development</strong>
+                            <ul style="margin-left: 20px; margin-top: 10px;">
+                                <li>Mortality experience worse than expected</li>
+                                <li>Increase future recovery estimates</li>
+                                <li>Favorable change → increases CSM (more benefit from retro)</li>
+                                <li>Released to P&L over remaining coverage period</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="formula-box" style="margin-top: 25px;">
+                        <div class="formula-title">Balance Sheet Impact (Simplified)</div>
+                        <div style="margin-top: 10px;">
+                            <strong>Asset Side:</strong><br/>
+                            Reinsurance Contract Asset = FCF + CSM<br/>
+                            = (PV of Recoveries - PV of Premiums + Risk Adj) + CSM<br/>
+                            <br/>
+                            Asset increases when: recoveries increase, premiums decrease, CSM grows<br/>
+                            Asset decreases when: CSM released, premiums paid, recoveries received
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 45: Cat XoL Issued Example -->
+            <div class="slide">
+                <div class="slide-header">
+                    <span class="section-label">Section 4: Reinsurance Issued (Liabilities)</span>
+                    <h1 class="slide-title">Catastrophe XoL Issued: Multi-Year Claims Development</h1>
+                </div>
+                <div class="content">
+                    <div class="highlight-box liability">
+                        <strong>Scenario:</strong> We issue a Cat XoL treaty to a cedant covering their property portfolio. Attachment: $50M, Limit: $200M. Premium: $25M. Year 2: Hurricane causes $180M in total losses to cedant.
+                    </div>
+
+                    <div class="flow-diagram" style="margin: 30px 0;">
+                        <div class="flow-box" style="background: #e3f2fd; width: 200px;">
+                            <strong>Cedant's Loss</strong><br/>
+                            $180M total
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box" style="background: #fff3e0; width: 200px;">
+                            <strong>First $50M</strong><br/>
+                            Cedant retains
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box" style="background: #ffebee; width: 200px;">
+                            <strong>Next $130M</strong><br/>
+                            WE PAY
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box" style="background: #f3e5f5; width: 200px;">
+                            <strong>Remaining $0</strong><br/>
+                            Layer exhausted
+                        </div>
+                    </div>
+
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Period</th>
+                                <th>Cedant Reports</th>
+                                <th>Our Estimate</th>
+                                <th>IFRS 17 Accounting</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Year 1</strong></td>
+                                <td>No cat events</td>
+                                <td>Ultimate: $0</td>
+                                <td>• Premium allocated over coverage period (PAA likely)<br/>• Minimal claims liability<br/>• Small CSM (profitable treaty)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Year 2 Q3</strong><br/>(Hurricane month)</td>
+                                <td>Initial: $120M</td>
+                                <td>Our exposure: $70M<br/>(120 - 50 attachment)</td>
+                                <td>• Incurred claim of $70M<br/>• Establish liability immediately<br/>• CSM fully released (onerous now)<br/>• Loss recognized</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Year 2 Q4</strong></td>
+                                <td>Updated: $150M</td>
+                                <td>Our exposure: $100M</td>
+                                <td>• Increase claim liability by $30M<br/>• Additional loss in P&L<br/>• Loss component grows</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Year 3 Q2</strong></td>
+                                <td>Updated: $180M</td>
+                                <td>Our exposure: $130M</td>
+                                <td>• Increase claim liability by $30M<br/>• Further loss recognition<br/>• Approaching layer limit</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Year 3 Q4</strong></td>
+                                <td>Final: $180M</td>
+                                <td>Exposure: $130M<br/>(capped at $200M limit)</td>
+                                <td>• Claims paid out over Years 4-5<br/>• Liability drawn down as paid<br/>• Discount unwind affects P&L</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="warning-banner" style="margin-top: 25px;">
+                        <strong>Reality Check:</strong> Cat claims development takes YEARS. Your initial estimate will be wrong. Every quarter you'll update your liability as new information emerges. This is normal and expected. Don't panic at estimate changes – it's inherent in the business.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 60: IFRS 9 ECL for Reinsurers -->
+            <div class="slide">
+                <div class="slide-header">
+                    <span class="section-label">Section 5: IFRS 9 for Reinsurers</span>
+                    <h1 class="slide-title">Expected Credit Loss (ECL): Reinsurer-Specific Challenges</h1>
+                </div>
+                <div class="content">
+                    <p style="font-size: 19px; margin-bottom: 25px;">Reinsurers face credit risk on TWO fronts: cedants (premium receivables) and retrocessionaires (recovery receivables). IFRS 9 requires Expected Credit Loss provisions on both.</p>
+
+                    <div class="formula-box">
+                        <div class="formula-title">ECL Three-Stage Model</div>
+                        <div style="margin-top: 15px; line-height: 1.9;">
+                            <strong>Stage 1:</strong> Performing (no significant credit deterioration)<br/>
+                            → Provision = 12-month Expected Credit Loss<br/>
+                            <br/>
+                            <strong>Stage 2:</strong> Significant increase in credit risk<br/>
+                            → Provision = Lifetime Expected Credit Loss<br/>
+                            <br/>
+                            <strong>Stage 3:</strong> Credit-impaired (default/bankruptcy)<br/>
+                            → Provision = Lifetime ECL + interest income on net carrying amount
+                        </div>
+                    </div>
+
+                    <div class="two-column" style="margin-top: 30px;">
+                        <div class="column-box">
+                            <h3>Premium Receivables (Cedants)</h3>
+                            <ul>
+                                <li><strong>Exposure:</strong> Outstanding premiums due from cedants</li>
+                                <li><strong>Risk:</strong> Cedant financial distress or insolvency</li>
+                                <li><strong>Indicators:</strong> Credit rating downgrades, payment delays, regulatory action</li>
+                                <li><strong>Measurement:</strong> Use cedant credit ratings, loss-given-default, exposure at default</li>
+                                <li><strong>Challenge:</strong> Offsetting payables (claims we owe them)</li>
+                            </ul>
+                        </div>
+                        <div class="column-box">
+                            <h3>Reinsurance Recoverables (Retros)</h3>
+                            <ul>
+                                <li><strong>Exposure:</strong> Future claim recoveries from retrocessionaires</li>
+                                <li><strong>Risk:</strong> Retrocessionaire can't pay when cat hits</li>
+                                <li><strong>Indicators:</strong> Retro's capital adequacy, rating, claims-paying history</li>
+                                <li><strong>Measurement:</strong> Probability of default × Loss given default × Exposure</li>
+                                <li><strong>Challenge:</strong> Long-tail: default might happen in 10 years</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="highlight-box warning" style="margin-top: 25px;">
+                        <strong>Key Question:</strong> ECL vs Risk Adjustment – aren't we double-counting credit risk?<br/><br/>
+                        <strong>Answer:</strong> They're different!<br/>
+                        • <strong>Risk Adjustment (IFRS 17):</strong> Non-financial risk (actuarial uncertainty, claims volatility)<br/>
+                        • <strong>ECL (IFRS 9):</strong> Credit/counterparty risk (will they pay us?)<br/><br/>
+                        BUT: The boundary is fuzzy and causes interpretation debates. IASB says "they're separate" but firms struggle with this in practice.
+                    </div>
+
+                    <div class="clickable-reveal" onclick="this.classList.toggle('revealed')" style="margin-top: 25px;">
+                        <strong>Click to reveal: Worked Example - Retrocessionaire ECL Calculation →</strong>
+                        <div class="reveal-content">
+                            <strong>Scenario:</strong> We have $50M in retrocession recoverables from Retro X (rated BBB).<br/><br/>
+                            
+                            <strong>Inputs:</strong><br/>
+                            • Probability of Default (PD): 1.5% over 5 years<br/>
+                            • Loss Given Default (LGD): 60% (we'd recover 40% in bankruptcy)<br/>
+                            • Exposure at Default (EAD): $50M<br/><br/>
+                            
+                            <strong>Calculation:</strong><br/>
+                            ECL = PD × LGD × EAD<br/>
+                            ECL = 1.5% × 60% × $50M = <strong>$450,000</strong><br/><br/>
+                            
+                            <strong>Accounting:</strong><br/>
+                            Dr. ECL Expense $450K<br/>
+                            Cr. Allowance for ECL $450K<br/><br/>
+                            
+                            Balance sheet shows net: $50M - $450K = $49.55M
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 70: IFRS 17/9 Intersection -->
+            <div class="slide">
+                <div class="slide-header">
+                    <span class="section-label">Section 6: The Intersection</span>
+                    <h1 class="slide-title">Where IFRS 17 and IFRS 9 Collide</h1>
+                    <p class="slide-subtitle">Accounting mismatches and P&L volatility</p>
+                </div>
+                <div class="content">
+                    <div class="warning-banner">
+                        <strong>The Core Problem:</strong> IFRS 17 measures insurance liabilities using insurance-specific discount rates. IFRS 9 measures financial assets at fair value or amortized cost using market rates. These don't match. Result? P&L volatility that has nothing to do with your actual business performance.
+                    </div>
+
+                    <div class="diagram" style="margin-top: 30px;">
+                        <h3 style="margin-bottom: 20px; color: var(--text-dark);">The Mismatch Diagram</h3>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 30px;">
+                            <div style="flex: 1; padding: 20px; background: rgba(45, 125, 70, 0.1); border: 2px solid var(--asset-green); border-radius: 8px;">
+                                <h4 style="color: var(--asset-green); margin-bottom: 15px;">ASSETS (IFRS 9)</h4>
+                                <ul style="font-size: 15px;">
+                                    <li>Bonds: Fair value through P&L</li>
+                                    <li>Market interest rates rise</li>
+                                    <li>Bond values fall → Loss in P&L</li>
+                                    <li>Reinsurance recoverables: ECL recognized</li>
+                                </ul>
+                            </div>
+
+                            <div style="flex: 0 0 100px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                <div style="font-size: 48px; color: var(--cashflow-orange);">≠</div>
+                                <div style="font-size: 14px; color: #666; margin-top: 10px; text-align: center;">Measurement<br/>Mismatch!</div>
+                            </div>
+
+                            <div style="flex: 1; padding: 20px; background: rgba(196, 30, 58, 0.1); border: 2px solid var(--liability-red); border-radius: 8px;">
+                                <h4 style="color: var(--liability-red); margin-bottom: 15px;">LIABILITIES (IFRS 17)</h4>
+                                <ul style="font-size: 15px;">
+                                    <li>Insurance contracts: Locked-in rates for CSM</li>
+                                    <li>Market rates rise</li>
+                                    <li>Liability falls → Gain goes to OCI (not P&L!)</li>
+                                    <li>Risk adjustment: Non-financial</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 30px; padding: 20px; background: #fff3cd; border-radius: 8px;">
+                            <strong style="color: #856404;">P&L RESULT:</strong><br/>
+                            Asset loss in P&L, liability gain in OCI → artificial P&L volatility → CFO gets angry calls from analysts → you explain this quarterly
+                        </div>
+                    </div>
+
+                    <div class="two-column" style="margin-top: 30px;">
+                        <div class="column-box">
+                            <h3>IFRS 17 Discount Rate Choices</h3>
+                            <ul>
+                                <li><strong>Top-down:</strong> Start with asset returns, adjust for credit/liquidity</li>
+                                <li><strong>Bottom-up:</strong> Risk-free rate + illiquidity premium</li>
+                                <li>Locked-in rate for CSM changes</li>
+                                <li>Current rate for FCF discount</li>
+                                <li>OCI option available (to reduce P&L vol)</li>
+                            </ul>
+                        </div>
+                        <div class="column-box">
+                            <h3>Practical Solutions Firms Use</h3>
+                            <ul>
+                                <li>Elect OCI for insurance finance I/E</li>
+                                <li>Hedge accounting for asset/liability matching</li>
+                                <li>FVTPL designation for bonds to match liabilities</li>
+                                <li>Dedicated reporting: "underlying profit" vs "IFRS profit"</li>
+                                <li>Extensive disclosures explaining movements</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 85: Day to Day Reality -->
+            <div class="slide">
+                <div class="slide-header">
+                    <span class="section-label">Section 8: Practical Application</span>
+                    <h1 class="slide-title">Your Day-to-Day Reality: What You'll Actually Do</h1>
+                </div>
+                <div class="content">
+                    <div class="key-concept">
+                        <strong>Job Roles in IFRS 17/9 for Reinsurance:</strong>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 25px;">
+                        <div class="glossary-term">
+                            <strong>Actuarial Analyst</strong>
+                            • Build cash flow models<br/>
+                            • Calculate CSM and FCF<br/>
+                            • Estimate risk adjustment<br/>
+                            • Claims development triangles<br/>
+                            • Experience analysis<br/>
+                            <em style="color: #666; font-size: 14px;">Tools: Python, R, Prophet, ResQ</em>
+                        </div>
+
+                        <div class="glossary-term">
+                            <strong>IFRS 17 Accountant</strong>
+                            • Book journal entries<br/>
+                            • Reconcile actuarial to GL<br/>
+                            • Prepare disclosures<br/>
+                            • Coordinate quarter-end close<br/>
+                            • Audit support<br/>
+                            <em style="color: #666; font-size: 14px;">Tools: SAP, Oracle, Excel, BPM systems</em>
+                        </div>
+
+                        <div class="glossary-term">
+                            <strong>Finance Analyst</strong>
+                            • Variance analysis (actual vs expected)<br/>
+                            • Management reporting<br/>
+                            • Performance metrics<br/>
+                            • Investor relations support<br/>
+                            • Strategic planning inputs<br/>
+                            <em style="color: #666; font-size: 14px;">Tools: Tableau, Power BI, Hyperion</em>
+                        </div>
+
+                        <div class="glossary-term">
+                            <strong>Risk Manager</strong>
+                            • Credit risk on cedants/retros<br/>
+                            • ECL modeling (IFRS 9)<br/>
+                            • Stress testing<br/>
+                            • Capital adequacy<br/>
+                            • Solvency II vs IFRS 17 reconciliation<br/>
+                            <em style="color: #666; font-size: 14px;">Tools: RiskWatch, AXIS, SAS</em>
+                        </div>
+                    </div>
+
+                    <div class="highlight-box csm" style="margin-top: 30px;">
+                        <h3>Quarterly Close Process (What Actually Happens)</h3>
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <strong>Day 1-5:</strong> Data gathering (bordereaux from cedants, retro statements, claims reports)
+                            </div>
+                            <div class="timeline-item">
+                                <strong>Day 6-10:</strong> Actuarial updates cash flow models, recalculate CSM, update risk adjustment
+                            </div>
+                            <div class="timeline-item">
+                                <strong>Day 11-15:</strong> Accounting books entries, runs reconciliations, prepares journal entry support
+                            </div>
+                            <div class="timeline-item">
+                                <strong>Day 16-20:</strong> Finance reviews results, variance analysis, identifies unusual items
+                            </div>
+                            <div class="timeline-item">
+                                <strong>Day 21-25:</strong> Disclosures drafted, audit review meetings, management sign-off
+                            </div>
+                            <div class="timeline-item">
+                                <strong>Day 26-30:</strong> Final filing, investor call prep, internal reporting
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 90: Summary and Key Takeaways -->
+            <div class="slide">
+                <div class="slide-header">
+                    <span class="section-label">Section 10: Summary</span>
+                    <h1 class="slide-title">Key Takeaways for Your First 90 Days</h1>
+                </div>
+                <div class="content">
+                    <div class="key-concept" style="margin-bottom: 30px;">
+                        <strong>You've learned:</strong> Reinsurance fundamentals, IFRS 17's building block approach, IFRS 9's ECL model, how they interact, what your job will actually involve, and where the complexity lies.
+                    </div>
+
+                    <div class="two-column">
+                        <div class="column-box">
+                            <h3>✓ What You Now Understand</h3>
+                            <ul>
+                                <li>Reinsurance is insurance for insurers</li>
+                                <li>IFRS 17 prohibits Day 1 profit (CSM exists)</li>
+                                <li>Three models: BBA, PAA, VFA</li>
+                                <li>Reinsurers have assets AND liabilities</li>
+                                <li>IFRS 9 handles investments and credit risk</li>
+                                <li>Life ≠ Non-Life in almost every way</li>
+                                <li>Claims development takes years</li>
+                                <li>This is genuinely complex work</li>
+                            </ul>
+                        </div>
+                        <div class="column-box">
+                            <h3>⚠ Common Pitfalls to Avoid</h3>
+                            <ul>
+                                <li>Confusing premium with revenue</li>
+                                <li>Thinking CSM is a reserve (it's deferred profit)</li>
+                                <li>Forgetting contract boundaries matter</li>
+                                <li>Ignoring credit risk on retrocession</li>
+                                <li>Not understanding cedant data lag</li>
+                                <li>Mixing up Life and Non-Life approaches</li>
+                                <li>Underestimating claims development time</li>
+                                <li>Not asking questions when confused</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="highlight-box asset" style="margin-top: 30px;">
+                        <h3>What to Focus On First</h3>
+                        <ul>
+                            <li><strong>Week 1-2:</strong> Learn your company's systems, meet the actuarial team, understand your book of business (Life or Non-Life?)</li>
+                            <li><strong>Week 3-4:</strong> Shadow a quarter-end close, see the full process from data to disclosure</li>
+                            <li><strong>Month 2:</strong> Own a small piece of the reconciliation process, understand one treaty type deeply</li>
+                            <li><strong>Month 3:</strong> Start contributing to variance analysis, understand why actuals differ from expected</li>
+                        </ul>
+                    </div>
+
+                    <div class="highlight-box liability" style="margin-top: 25px;">
+                        <h3>Resources to Bookmark</h3>
+                        <ul>
+                            <li><strong>IFRS Foundation:</strong> https://www.ifrs.org/issued-standards/list-of-standards/ifrs-17-insurance-contracts/</li>
+                            <li><strong>IFRS 17 Educational Material:</strong> IASB publishes webinars and guides</li>
+                            <li><strong>Big 4 Insights:</strong> Deloitte, PwC, EY, KPMG all have excellent IFRS 17 publications</li>
+                            <li><strong>Industry Bodies:</strong> Insurance Europe, Geneva Association, reinsurance association publications</li>
+                            <li><strong>Company-Specific:</strong> Your firm's IFRS 17 implementation documentation (ask your manager)</li>
+                        </ul>
+                    </div>
+
+                    <div class="warning-banner" style="margin-top: 25px;">
+                        <strong>Final Advice:</strong> Don't expect to understand everything immediately. IFRS 17/9 for reinsurance took the industry 10+ years to implement. You're learning one of the most complex areas of finance. Be patient with yourself. Ask questions. Build relationships with actuaries and accountants. Learn one treaty type deeply before branching out. And remember: everyone in this field was confused at first.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 91: Glossary of Terms -->
+            <div class="slide">
+                <div class="slide-header">
+                    <span class="section-label">Section 10: Reference</span>
+                    <h1 class="slide-title">Complete Glossary of Terms</h1>
+                </div>
+                <div class="content" style="overflow-y: scroll; max-height: 600px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="glossary-term">
+                            <strong>BBA (Building Block Approach)</strong>
+                            The general model in IFRS 17 for measuring insurance contract liabilities using FCF + CSM
+                        </div>
+                        <div class="glossary-term">
+                            <strong>Bordereaux</strong>
+                            Detailed reports from cedants showing individual policies, premiums, and claims
+                        </div>
+                        <div class="glossary-term">
+                            <strong>Cedant / Ceding Company</strong>
+                            The primary insurer that purchases reinsurance
+                        </div>
+                        <div class="glossary-term">
+                            <strong>Ceding Commission</strong>
+                            Payment from reinsurer to cedant covering acquisition costs and profit
+                        </div>
+                        <div class="glossary-term">
+                            <strong>Contract Boundary</strong>
+                            The point at which the reinsurer has no substantive obligation to provide coverage
+                        </div>
+                        <div class="glossary-term">
+                            <strong>CSM (Contractual Service Margin)</strong>
+                            Unearned profit on a group of contracts, released over the coverage period
+                        </div>
+                        <div class="glossary-term">
+                            <strong>ECL (Expected Credit Loss)</strong>
+                            IFRS 9 provision for credit risk on financial assets and receivables
+                        </div>
+                        <div class="glossary-term">
+                            <strong>Facultative Reinsurance</strong>
+                            Individual risk-by-risk reinsurance (opposite of treaty)
+                        </div>
+                        <div class="glossary-term">
+                            <strong>FCF (Fulfilment Cash Flows)</strong>
+                            PV of future cash flows + risk adjustment for non-financial risk
+                        </div>
+                        <div class="glossary-term">
+                            <strong>IBNR (Incurred But Not Reported)</strong>
+                            Claims that have occurred but haven't been reported yet
+                        </div>
+                        <div class="glossary-term">
+                            <strong>Loss Component</strong>
+                            Tracks losses on onerous contracts (where FCF > 0 at inception)
+                        </div>
+                        <div class="glossary-term">
+                            <strong>OCI (Other Comprehensive Income)</strong>
+                            Gains/losses that bypass P&L, shown in equity
+                        </div>
+                        <div class="glossary-term">
+                            <strong>PAA (Premium Allocation Approach)</strong>
+                            Simplified IFRS 17 model for short-duration contracts
+                        </div>
+                        <div class="glossary-term">
+                            <strong>Quota Share (QS)</strong>
+                            Proportional treaty where reinsurer takes fixed % of all risks
+                        </div>
+                        <div class="glossary-term">
+                            <strong>Retrocession</strong>
+                            Reinsurance purchased by a reinsurer
+                        </div>
+                        <div class="glossary-term">
+                            <strong>Risk Adjustment</strong>
+                            Compensation for bearing non-financial uncertainty
+                        </div>
+                        <div class="glossary-term">
+                            <strong>Surplus Treaty</strong>
+                            Proportional treaty where reinsurer takes amounts exceeding cedant's retention
+                        </div>
+                        <div class="glossary-term">
+                            <strong>VFA (Variable Fee Approach)</strong>
+                            IFRS 17 model for participating/unit-linked contracts
+                        </div>
+                        <div class="glossary-term">
+                            <strong>XoL (Excess of Loss)</strong>
+                            Non-proportional treaty covering losses above attachment point
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Final Slide -->
+            <div class="slide title-slide">
+                <div>
+                    <div class="slide-title">You're Ready to Begin</div>
+                    <p style="font-size: 22px; margin-top: 40px; color: rgba(255, 255, 255, 0.9); line-height: 1.6;">
+                        IFRS 17 & IFRS 9 for reinsurance is complex, but you now have the foundation.<br/><br/>
+                        Start with one treaty type. Master the basics. Ask questions.<br/><br/>
+                        Welcome to one of the most intellectually challenging areas of finance.
+                    </p>
+                    <p style="font-size: 18px; margin-top: 50px; color: var(--accent);">
+                        Good luck in your reinsurance career.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" onclick="prevSlide()">‹ Previous</button>
+            <span class="slide-number" id="slideNumber">1 / 92</span>
+            <button class="control-btn" onclick="nextSlide()">Next ›</button>
+        </div>
+
+        <button class="menu-toggle" onclick="toggleMenu()">☰ Menu</button>
+        <button class="notes-toggle" onclick="toggleNotes()">📝 Notes</button>
+
+        <div class="navigation-menu" id="navigationMenu">
+            <div class="menu-section">
+                <div class="menu-section-title">Jump to Section</div>
+                <div class="menu-item" onclick="goToSlide(1)">Title & Introduction</div>
+                <div class="menu-item" onclick="goToSlide(2)">Section 1: Fundamentals (Slides 2-9)</div>
+                <div class="menu-item" onclick="goToSlide(10)">Section 2: IFRS 17 Core Concepts (10-27)</div>
+                <div class="menu-item" onclick="goToSlide(28)">Section 3: Reinsurance Contracts Held (28-49)</div>
+                <div class="menu-item" onclick="goToSlide(50)">Section 4: Reinsurance Contracts Issued (50-71)</div>
+                <div class="menu-item" onclick="goToSlide(60)">Section 5: IFRS 9 for Reinsurers (60-77)</div>
+                <div class="menu-item" onclick="goToSlide(70)">Section 6: The Intersection (70-81)</div>
+                <div class="menu-item" onclick="goToSlide(82)">Section 7: Transition (82-89)</div>
+                <div class="menu-item" onclick="goToSlide(85)">Section 8: Practical Application (85-89)</div>
+                <div class="menu-item" onclick="goToSlide(90)">Section 9 & 10: Summary (90-92)</div>
+            </div>
+        </div>
+
+        <div class="speaker-notes" id="speakerNotes">
+            <strong>Speaker Notes:</strong> Use arrow keys to navigate. Press 'N' for notes. This presentation covers the complete IFRS 17/9 framework from a reinsurer's perspective. Focus on building understanding from first principles rather than memorizing rules.
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        function updateSlide() {
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active');
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                }
+            });
+            
+            document.getElementById('slideNumber').textContent = `${currentSlide + 1} / ${totalSlides}`;
+            document.getElementById('progressFill').style.width = `${((currentSlide + 1) / totalSlides) * 100}%`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+
+        function goToSlide(slideNumber) {
+            if (slideNumber >= 1 && slideNumber <= totalSlides) {
+                currentSlide = slideNumber - 1;
+                updateSlide();
+                toggleMenu();
+            }
+        }
+
+        function toggleMenu() {
+            document.getElementById('navigationMenu').classList.toggle('active');
+        }
+
+        function toggleNotes() {
+            document.getElementById('speakerNotes').classList.toggle('active');
+        }
+
+        function showTab(event, tabId) {
+            const tabContents = event.target.closest('.content').querySelectorAll('.tab-content');
+            const tabs = event.target.closest('.content').querySelectorAll('.tab');
+            
+            tabContents.forEach(content => content.classList.remove('active'));
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+            if (e.key === 'n' || e.key === 'N') toggleNotes();
+            if (e.key === 'm' || e.key === 'M') toggleMenu();
+        });
+
+        // Initialize
+        updateSlide();
+    </script>
+</body>
+</html>
