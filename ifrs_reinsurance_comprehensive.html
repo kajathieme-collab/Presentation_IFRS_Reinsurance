@@ -24,6 +24,13 @@
             --border: #d1d5db;
         }
 
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: var(--bg-dark);
@@ -609,9 +616,46 @@
         .tab-content.active {
             display: block;
         }
+
+        /* Ensure first slide is visible even without JavaScript */
+        .slide:first-of-type {
+            display: flex !important;
+        }
+
+        /* Hide other slides by default */
+        .slide:not(:first-of-type) {
+            display: none !important;
+        }
+
+        /* JavaScript will override these with .active class */
+        .slide.active {
+            display: flex !important;
+        }
+
+        .slide:not(.active) {
+            display: none !important;
+        }
+
+        .noscript-warning {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ffc107;
+            color: #000;
+            padding: 15px 30px;
+            border-radius: 8px;
+            z-index: 10000;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
+    <noscript>
+        <div class="noscript-warning">
+            ⚠️ JavaScript is disabled. Navigation controls will not work. Please enable JavaScript for the full experience.
+        </div>
+    </noscript>
     <div class="presentation-container">
         <div class="progress-bar">
             <div class="progress-fill" id="progressFill"></div>
@@ -1895,20 +1939,39 @@
     </div>
 
     <script>
+        console.log('Presentation script loading...');
+
         let currentSlide = 0;
         const slides = document.querySelectorAll('.slide');
         const totalSlides = slides.length;
 
+        console.log(`Found ${totalSlides} slides`);
+
         function updateSlide() {
-            slides.forEach((slide, index) => {
-                slide.classList.remove('active');
-                if (index === currentSlide) {
-                    slide.classList.add('active');
+            try {
+                console.log(`Updating to slide ${currentSlide + 1}`);
+
+                slides.forEach((slide, index) => {
+                    slide.classList.remove('active');
+                    if (index === currentSlide) {
+                        slide.classList.add('active');
+                    }
+                });
+
+                const slideNumber = document.getElementById('slideNumber');
+                const progressFill = document.getElementById('progressFill');
+
+                if (slideNumber) {
+                    slideNumber.textContent = `${currentSlide + 1} / ${totalSlides}`;
                 }
-            });
-            
-            document.getElementById('slideNumber').textContent = `${currentSlide + 1} / ${totalSlides}`;
-            document.getElementById('progressFill').style.width = `${((currentSlide + 1) / totalSlides) * 100}%`;
+                if (progressFill) {
+                    progressFill.style.width = `${((currentSlide + 1) / totalSlides) * 100}%`;
+                }
+
+                console.log('Slide updated successfully');
+            } catch (error) {
+                console.error('Error updating slide:', error);
+            }
         }
 
         function nextSlide() {
@@ -1961,7 +2024,18 @@
         });
 
         // Initialize
-        updateSlide();
+        try {
+            console.log('Initializing presentation...');
+            updateSlide();
+            console.log('Presentation initialized successfully!');
+        } catch (error) {
+            console.error('Error initializing presentation:', error);
+            // Fallback: make first slide visible
+            if (slides.length > 0) {
+                slides[0].classList.add('active');
+                slides[0].style.display = 'flex';
+            }
+        }
     </script>
 </body>
 </html>
