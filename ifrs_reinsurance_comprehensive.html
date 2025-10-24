@@ -617,23 +617,12 @@
             display: block;
         }
 
-        /* Ensure first slide is visible even without JavaScript */
-        .slide:first-of-type {
+        /* Force visibility for debugging */
+        .slide.active,
+        .slide.title-slide.active {
             display: flex !important;
-        }
-
-        /* Hide other slides by default */
-        .slide:not(:first-of-type) {
-            display: none !important;
-        }
-
-        /* JavaScript will override these with .active class */
-        .slide.active {
-            display: flex !important;
-        }
-
-        .slide:not(.active) {
-            display: none !important;
+            visibility: visible !important;
+            opacity: 1 !important;
         }
 
         .noscript-warning {
@@ -656,6 +645,12 @@
             ⚠️ JavaScript is disabled. Navigation controls will not work. Please enable JavaScript for the full experience.
         </div>
     </noscript>
+
+    <!-- Debug indicator - always visible -->
+    <div style="position: fixed; top: 10px; left: 10px; background: lime; color: black; padding: 5px 10px; z-index: 99999; font-size: 12px; border-radius: 4px;">
+        PAGE LOADED ✓
+    </div>
+
     <div class="presentation-container">
         <div class="progress-bar">
             <div class="progress-fill" id="progressFill"></div>
